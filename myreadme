@@ -1,0 +1,644 @@
+Task manager
+1.	Authentication Module
+Features
+•	Register 
+•	Login 
+•	Logout 
+•	Refresh Token 
+•	Forgot Password 
+•	Reset Password 
+•	Email Verification 
+•	Change Password 
+•	Update Profile 
+•	User profile
+•	Search users
+•	Delete Account 
+•	Upload Profile Picture
+
+
+2.	Workspace Module
+Features
+•	Create Workspace 
+•	Update Workspace 
+•	Delete Workspace 
+•	Invite Members 
+•	Remove Members 
+•	Leave Workspace 
+•	Workspace Avatar 
+•	Workspace Description
+•	Join workspace
+3. Team & Roles Module
+Roles
+•	Owner 
+•	Admin 
+•	Member 
+Permissions
+•	Invite users 
+•	Remove users 
+•	Create projects 
+•	Delete projects 
+•	Assign tasks 
+4.Project Module
+Features
+•	Create Project 
+•	Update Project 
+•	Delete Project 
+•	Get project details
+5. Task Module
+Features
+•	Create Task 
+•	Get task
+•	Get all tasks
+•	Edit Task 
+•	Delete Task
+6. Comments & Discussion
+Features
+•	Add Comment 
+•	Edit Comment 
+•	Delete Comment
+
+7. Dashboard
+Show:
+•	Total Workspaces 
+•	Total Projects 
+•	Total Tasks 
+•	Tasks Completed 
+•	Pending Tasks 
+•	Overdue Tasks 
+•	Recent Activity 
+•	Upcoming Deadlines 
+•	Team Members
+8. Activity log
+Features
+•	Task created
+•	Task updated
+•	User left workspace
+•	User joined workspace
+•	Task assigned
+•	Comment added
+
+ERD diagram
+
+User
+id: string
+firstName: string
+lastName: string
+username: string
+email: string
+passwordHash: string
+profilePicture?: string
+isVerified: boolean
+createdAt: Date
+updatedAt: Date
+
+Workspace
+id: string
+name: string
+description?: string
+avatar?: string
+inviteCode: string
+ownerId: string
+createdAt: Date
+updatedAt: Date
+
+RefreshToken
+id: string
+token: string
+userId: string
+expiresAt: Date
+revoked: boolean
+createdAt: Date
+updatedAt: Date
+
+WorkspaceMember
+id: string
+workspaceId: string
+userId: string
+role: enum: ["OWNER", "ADMIN", "MEMBER"]
+joinedAt: Date
+
+Project
+id: string
+workspaceId: string
+name: string
+description?: string
+createdBy: string
+status: enum: ["ACTIVE", "ARCHIVED"]
+createdAt: Date
+updatedAt: Date
+
+ActivityLog
+
+id: string
+workspaceId: string
+userId: string
+action: enum[“CREATED”, ” UPDATED”, ” DELETED”, ” ASSIGNED”, ”COMMENTED”, ” INVITED”, ” REMOVED”, ” STATUS_CHANGED”]
+entityType: enum[“WORKSPACE”, ” PROJECT”, ” TASK”, ” COMMENT”, “MEMBER”]
+entityId: string
+metadata?: object
+createdAt: Date
+
+Task
+id: string
+projectId: string
+title: string
+description?: string
+status: enum[“TODO”, ” IN_PROGRESS”, ” REVIEW”, “DONE”]
+priority: enum[“LOW”, ” MEDIUM”, ” HIGH”, URGENT”]
+dueDate?: Date
+assigneeId?: string
+reporterId: string
+createdAt: Date
+updatedAt: Date
+
+Comment
+id: string
+taskId: string
+userId: string
+content: string
+createdAt: Date
+updatedAt: Date
+
+Tag
+id: string
+workspaceId: string
+name: string
+color: string
+createdAt: Date
+updatedAt: Date
+
+TaskTag
+taskId: string
+tagId: string
+createdAt: Date
+
+api endpoint
+
+auth
+POST /auth/register
+1. Validate request body
+2. Check if email exists
+3. Check if username exists
+4. Hash password
+5. Create user
+6. Generate access token
+7. Generate refresh token
+8. Save refresh token
+9. Return user and tokens
+
+POST /auth/login
+1. Validate request body
+2. Find user by email
+3. Check if user exists
+4. Compare password with passwordHash
+5. Generate access token
+6. Generate refresh token
+7. Save refresh token
+8. Return user and tokens
+
+POST /auth/logout
+1. Authenticate user
+2. Validate request body
+3. Find refresh token
+4. Verify it belongs to the user
+5. Revoke or delete refresh token
+6. Return success response
+
+POST /auth/refresh-token
+1. Validate request body
+2. Find refresh token in database
+3. Check if token exists
+4. Check if token is revoked
+5. Check if token is expired
+6. Verify JWT refresh token
+7. Find user
+8. Generate new access token
+9. Return access token
+
+POST /auth/forgot-password
+1. Validate request body
+2. Find user by email
+3. If user exists:
+   - Generate reset token
+   - Save hashed reset token and expiry
+   - Send email with reset link
+4. Always return success response
+
+POST /auth/reset-password
+1. Validate request body
+2. Hash the reset token
+3. Find user with matching passwordResetToken
+4. Check passwordResetExpires
+5. Hash new password
+6. Update user's passwordHash
+7. Clear passwordResetToken
+8. Clear passwordResetExpires
+9. Revoke all refresh tokens for the user
+10. Return success response
+
+POST /auth/change-password
+1. Authenticate user
+2. Validate request body
+3. Find user
+4. Compare currentPassword with passwordHash
+5. If incorrect, throw error
+6. Hash newPassword
+7. Update passwordHash
+8. Revoke all refresh tokens
+9. Return success response
+
+POST /auth/verify-email
+1. Validate request body
+2. Hash token
+3. Find user with matching verification token
+4. Check token expiry
+5. Set isVerified = true
+6. Clear verification token
+7. Clear verification expiry
+8. Return success response
+
+user
+GET /users/me
+1. Authenticate user
+2. Extract userId from JWT
+3. Find user by id
+4. Return user profile
+
+PATCH /users/me
+1. Authenticate user
+2. Validate body
+3. Get userId from JWT
+4. Check username conflict (if changing)
+5. Update user fields
+6. Return updated user
+DELETE /users/me
+1. Authenticate user
+2. Validate password
+3. Get userId from JWT
+4. Check password matches
+5. Delete user's refresh tokens
+6. Remove user data
+7. Handle owned workspaces
+8. Return success response
+
+POST /users/me/avatar
+1. Authenticate user
+2. Receive image file
+3. Validate file type/size
+4. Upload to storage
+5. Get image URL
+6. Update user's profilePicture
+7. Return updated user
+
+GET /users/search
+id="h8r8sc"
+1. Authenticate user
+2. Get search query
+3. Search username/email/name
+4. Exclude sensitive fields
+5. Return matching users
+
+workspace
+GET /workspaces/:workspaceId
+1. Authenticate user
+2. Get userId from JWT
+3. Get workspaceId from params
+4. Check workspace exists
+5. Check user is a member of workspace
+6. Return workspace data
+
+GET /workspaces
+1. Authenticate user
+2. Get userId from JWT
+3. Find WorkspaceMember records by userId
+4. Get related workspaces
+5. Return workspaces
+
+POST /workspaces
+1. Authenticate user
+2. Validate body
+3. Get userId from JWT
+4. Generate inviteCode
+5. Create workspace
+6. Set ownerId = userId
+7. Create WorkspaceMember record
+8. Set role = OWNER
+9. Return workspace
+
+DELETE /workspaces/:workspaceId
+1. Authenticate user
+2. Validate workspaceId
+3. Find workspace
+4. Check user is workspace owner
+5. Delete workspace
+6. Delete workspace members
+7. Delete projects
+8. Delete tasks
+9. Delete comments
+10. Delete activity logs
+11. Return success
+
+PATCH /workspaces/:workspaceId
+1. Authenticate user
+2. Validate workspaceId
+3. Check workspace exists
+4. Check user is OWNER/ADMIN
+5. Update allowed fields
+6. Create ActivityLog
+7. Return updated workspace
+
+POST /workspaces/join
+1. Authenticate user
+2. Validate inviteCode
+3. Find workspace by inviteCode
+4. Check workspace exists
+5. Check user is not already a member
+6. Create WorkspaceMember
+7. Set role = MEMBER
+8. Create ActivityLog
+9. Return workspace
+
+POST /workspaces/:workspaceId/leave
+1. Authenticate user
+2. Validate workspaceId
+3. Find workspace
+4. Check user is a member
+5. Check user is not owner
+6. Remove WorkspaceMember record
+7. Create ActivityLog
+8. Return success
+
+DELETE/workspaces/:workspaceId/members/: memberId
+1. Authenticate user
+2. Validate params
+3. Find workspace
+4. Check requester role
+5. Find member in WorkspaceMember
+6. Check target is not owner
+7. Delete WorkspaceMember record
+8. Create ActivityLog
+9. Return success
+
+POST /workspaces/:workspaceId/invite
+1. Authenticate user
+2. Validate params/body
+3. Find workspace
+4. Check requester role
+5. Find invited user
+6. Check user is not already a member
+7. Create WorkspaceMember
+8. Set role = MEMBER
+9. Create ActivityLog
+10. Return success
+
+Project
+GET /workspaces/:workspaceId/projects
+1. Authenticate user
+2. Validate workspaceId
+3. Check workspace exists
+4. Check user is workspace member
+5. Find projects by workspaceId
+6. Return projects
+
+POST /workspaces/:workspaceId/projects
+1. Authenticate user
+2. Validate workspaceId
+3. Check workspace exists
+4. Check user is workspace member
+5. Create project
+6. Set:
+   - workspaceId
+   - createdBy = userId
+   - status = ACTIVE
+7. Create ActivityLog
+8. Return project
+
+GET    /projects/:projectId
+1. Authenticate user
+2. Validate projectId
+3. Find project
+4. Get project.workspaceId
+5. Check user is workspace member
+6. Return project
+
+PATCH /projects/:projectId
+1. Authenticate user
+2. Validate projectId
+3. Find project
+4. Get workspaceId
+5. Check user role in workspace
+6. Update allowed fields
+7. Create ActivityLog
+8. Return updated project
+
+DELETE /projects/:projectId
+1. Authenticate user
+2. Validate projectId
+3. Find project
+4. Get workspaceId
+5. Check user role
+6. Delete project
+7. Delete related tasks
+8. Delete task tags
+9. Delete comments
+10. Create ActivityLog
+11. Return success
+Task
+
+GET /projects/:projectId/tasks
+1. Authenticate user
+2. Validate projectId
+3. Find project
+4. Check project exists
+5. Check user has access to project workspace
+6. Apply filters
+7. Fetch tasks
+8. Return paginated results
+
+POST /projects/:projectId/tasks
+1. Authenticate user
+2. Validate projectId
+3. Validate request body
+4. Find project
+5. Check project exists
+6. Check user has access
+7. If assigneeId exists:
+   - Verify user is a workspace member
+8. Create task
+9. Set:
+   - projectId
+   - reporterId = current user
+   - status = TODO
+10. Create ActivityLog
+11. Return task
+
+GET /tasks/:taskId
+1. Authenticate user
+2. Validate taskId
+3. Find task
+4. Check task exists
+5. Get project
+6. Get workspace
+7. Check user is workspace member
+8. Return task
+
+DELETE /tasks/:taskId
+1. Authenticate user
+2. Validate taskId
+3. Find task
+4. Check task exists
+5. Get workspace membership
+6. Check permission
+7. Delete task
+8. Delete task tags
+9. Delete task comments
+10. Create ActivityLog
+11. Return success
+
+PATCH /tasks/:taskId
+1. Authenticate user
+2. Validate taskId
+3. Find task
+4. Check task exists
+5. Check permission
+6. If assigneeId provided:
+   - Verify user exists
+   - Verify user is a workspace member
+7. Update task fields
+8. Create ActivityLog
+9. Return updated task
+
+Comment
+
+GET /tasks/:taskId/comments
+1. Authenticate user
+2. Validate taskId
+3. Find task
+4. Check task exists
+5. Check user has access
+6. Fetch comments
+7. Sort by createdAt ascending
+8. Return paginated comments
+
+POST /tasks/:taskId/comments
+1. Authenticate user
+2. Validate taskId
+3. Validate request body
+4. Find task
+5. Check task exists
+6. Check user has access
+7. Create comment
+8. Set:
+   - taskId
+   - userId = current user
+9. Create ActivityLog
+10. Return comment
+
+DELETE comments/: commentId
+1. Authenticate user
+2. Validate commentId
+3. Find comment
+4. Check comment exists
+5. Find task
+6. Find project
+7. Check workspace role
+8. Verify:
+   - user is comment author
+   OR
+   - user is OWNER/ADMIN
+9. Delete comment
+10. Create ActivityLog
+11. Return success
+
+PATCH /comments/:commentId
+1. Authenticate user
+2. Validate commentId
+3. Validate request body
+4. Find comment
+5. Check comment exists
+6. Verify current user is comment author
+7. Update content
+8. Update updatedAt
+9. Create ActivityLog
+10. Return updated comment
+
+Members
+
+GET /workspaces/:workspaceId/members
+1. Authenticate user
+2. Validate workspaceId
+3. Find workspace
+4. Check workspace exists
+5. Check user is a workspace member
+6. Find WorkspaceMember records
+7. Populate user details
+8. Return members
+
+PATCH /workspaces/:workspaceId/members/:memberId/role
+1. Authenticate user
+2. Validate params
+3. Validate role
+4. Find workspace
+5. Check requester is owner
+6. Find target WorkspaceMember
+7. Check target is not owner
+8. Update role
+9. Create ActivityLog
+10. Return updated member
+
+GET /dashboard
+1. Authenticate user
+2. Get userId from JWT
+3. Get user's workspaces
+4. Get workspace stats
+5. Get task statistics
+6. Get recent activity
+7. Return dashboard data
+- total workspaces
+- total projects
+- total tasks
+- tasks assigned to me
+- tasks by status
+- recent activity
+- upcoming deadlines
+
+GET /workspaces/:workspaceId/activity-logs
+1. Authenticate user
+2. Validate workspaceId
+3. Find workspace
+4. Check workspace exists
+5. Check user is a member
+6. Fetch ActivityLog records
+7. Populate user details
+8. Return logs
+
+Project structure
+
+server.js
+app.js
+routes/
+controllers/
+models/
+middleware/
+validators/
+utils/
+config/
+.env
+package.json
+README.md
+
+Packages
+Express
+Mongoose
+Dotenv
+Bcryptjs
+Jsonwebtoken
+cookie-parser
+zod
+helmet
+cors
+express-rate-limit
+multer
+cloudinary
+nodemon
+morgan
