@@ -4,6 +4,15 @@ A full-featured RESTful task management backend built with Node.js, Express, and
 
 ---
 
+---
+## 🌐 Live API
+
+The API is deployed on Render and accessible at:
+
+https://task-manager-api-f9mi.onrender.com
+
+---
+
 ## Features
 
 - **Auth** — Register, login, logout, refresh tokens, email verification, password reset/change
