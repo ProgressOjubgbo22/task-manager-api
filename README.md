@@ -3,8 +3,6 @@
 A full-featured RESTful task management backend built with Node.js, Express, and MongoDB.
 
 ---
-
----
 ## 🌐 Live API
 
 The API is deployed on Render and accessible at:
